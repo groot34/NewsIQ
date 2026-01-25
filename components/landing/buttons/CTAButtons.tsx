@@ -5,9 +5,11 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 async function CTAButtons() {
-  const { has, userId } = await auth();
-  const hasPaidPlan =
-    (await has({ plan: "pro" })) || (await has({ plan: "starter" }));
+  // const { has, userId } = await auth();
+  // const hasPaidPlan =
+  //   (await has({ plan: "pro" })) || (await has({ plan: "starter" }));
+  const { userId } = await auth();
+  const hasPaidPlan = true;
 
   return (
     <>
