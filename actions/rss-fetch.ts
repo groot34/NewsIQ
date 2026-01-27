@@ -35,11 +35,12 @@ export async function validateAndAddFeed(userId: string, url: string) {
         articlesCreated: result.created,
         articlesSkipped: result.skipped,
       };
-    } catch {
+    } catch (error) {
       return {
         feed,
         articlesCreated: 0,
         articlesSkipped: 0,
+        error: error instanceof Error ? error.message : "Failed to fetch initial articles",
       };
     }
   }, "validate and add feed");

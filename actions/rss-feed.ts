@@ -45,28 +45,48 @@ export async function updateFeedLastFetched(feedId: string) {
  */
 export async function deleteRssFeed(feedId: string) {
   return wrapDatabaseOperation(async () => {
-    // MongoDB-specific: Remove feedId from sourceFeedIds arrays
-    await prisma.$runCommandRaw({
-      update: "RssArticle",
-      updates: [
-        {
-          q: { sourceFeedIds: feedId },
-          u: { $pull: { sourceFeedIds: feedId } },
-          multi: true,
-        },
-      ],
-    });
-
-    // Delete articles that have no more feed references (empty sourceFeedIds)
-    await prisma.rssArticle.deleteMany({
+    // 1. Find all articles that reference this feed (either as primary or in sources)
+    const articles = await prisma.rssArticle.findMany({
       where: {
-        sourceFeedIds: {
-          isEmpty: true,
-        },
+        OR: [{ feedId: feedId }, { sourceFeedIds: { has: feedId } }],
+      },
+      select: {
+        id: true,
+        feedId: true,
+        sourceFeedIds: true,
       },
     });
 
-    // Finally, delete the feed itself
+    // 2. Process each article linearly to ensure safety
+    for (const article of articles) {
+      // Remove the current feedId from the sources list
+      const newSourceIds = article.sourceFeedIds.filter((id) => id !== feedId);
+
+      if (newSourceIds.length === 0) {
+        // If no sources left, delete the article completely
+        await prisma.rssArticle.delete({
+          where: { id: article.id },
+        });
+      } else {
+        // If sources remain, we need to update the article
+        const updates: any = {
+          sourceFeedIds: newSourceIds,
+        };
+
+        // If the deleted feed was the primary one, we MUST assign a new primary
+        if (article.feedId === feedId) {
+          updates.feedId = newSourceIds[0]; // Promote first remaining source to primary
+        }
+
+        await prisma.rssArticle.update({
+          where: { id: article.id },
+          data: updates,
+        });
+      }
+    }
+
+    // 3. Finally, delete the feed itself
+    // Now that all references are gone, this should succeed without P2014
     await prisma.rssFeed.delete({
       where: { id: feedId },
     });
