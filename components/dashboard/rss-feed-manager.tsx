@@ -55,6 +55,7 @@ export async function RssFeedManager() {
             currentFeedCount={feeds.length}
             feedLimit={feedLimit}
             isPro={isPro}
+            existingFeedUrls={feeds.map((f) => f.url)}
           />
         </div>
         {feeds.length >= feedLimit && (
@@ -76,6 +77,7 @@ export async function RssFeedManager() {
               currentFeedCount={feeds.length}
               feedLimit={feedLimit}
               isPro={isPro}
+              existingFeedUrls={feeds.map((f) => f.url)}
               trigger={
                 <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
                   <Plus className="h-4 w-4 mr-2" />
