@@ -12,15 +12,15 @@ export function PageHeader({
   description,
 }: PageHeaderProps) {
   return (
-    <div className="flex items-center gap-3">
-      <div className="inline-flex size-12 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 text-white">
-        <Icon className="size-6" />
+    <div className="flex items-center gap-4">
+      <div className="inline-flex size-14 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/25">
+        <Icon className="size-7" />
       </div>
       <div>
-        <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white">
+        <h1 className="text-4xl font-bold tracking-tight text-white">
           {title}
         </h1>
-        <p className="text-lg text-gray-600 dark:text-gray-400 mt-1">
+        <p className="text-lg text-slate-400 mt-1">
           {description}
         </p>
       </div>

@@ -1,31 +1,30 @@
 import { auth } from "@clerk/nextjs/server";
-import { Crown, History as HistoryIcon } from "lucide-react";
+import { History as HistoryIcon } from "lucide-react";
 import { getNewslettersByUserId } from "@/actions/newsletter";
 import { upsertUserFromClerk } from "@/actions/user";
 import { NewsletterHistoryList } from "@/components/dashboard/newsletter-history-list";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { PricingCards } from "@/components/dashboard/pricing-cards";
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 
 export default async function HistoryPage() {
-  const { userId, has } = await auth();
+  const { userId } = await auth();
 
   if (!userId) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 dark:from-black dark:to-gray-950">
-        <div className="container mx-auto py-12 px-6 lg:px-8">
-          <Card className="transition-all hover:shadow-lg">
+      <div className="min-h-screen relative">
+        <div className="absolute inset-0 grid-pattern pointer-events-none" />
+        <div className="relative container mx-auto py-12 px-6 lg:px-8">
+          <Card className="glass-card border-slate-800">
             <CardHeader>
-              <CardTitle className="text-2xl">
+              <CardTitle className="text-2xl text-white">
                 Authentication Required
               </CardTitle>
-              <CardDescription className="text-base">
+              <CardDescription className="text-base text-slate-400">
                 Please sign in to view your newsletter history.
               </CardDescription>
             </CardHeader>
@@ -35,13 +34,16 @@ export default async function HistoryPage() {
     );
   }
 
-  const isPro = true; // Enabled for all users
   const user = await upsertUserFromClerk(userId);
   const newsletters = await getNewslettersByUserId(user.id);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 dark:from-black dark:to-gray-950">
-      <div className="container mx-auto py-12 px-6 lg:px-8 space-y-12">
+    <div className="min-h-screen relative">
+      {/* Background effects */}
+      <div className="absolute inset-0 grid-pattern pointer-events-none" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-[128px] pointer-events-none" />
+      
+      <div className="relative container mx-auto py-12 px-6 lg:px-8 space-y-12">
         {/* Header */}
         <PageHeader
           icon={HistoryIcon}
@@ -49,10 +51,6 @@ export default async function HistoryPage() {
           description="View and manage your saved newsletters"
         />
 
-        {/* Free User Upgrade Prompt */}
-        {/* Free User Upgrade Prompt Removed */}
-
-        {/* Newsletter List */}
         {/* Newsletter List */}
         <NewsletterHistoryList newsletters={newsletters} />
       </div>

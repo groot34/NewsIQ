@@ -306,35 +306,37 @@ export function NewsletterGenerationPage() {
   // If no params, show error
   if (!params) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 dark:from-black dark:to-gray-950">
-        <div className="container mx-auto py-12 px-6 lg:px-8">
-          <Card className="transition-all hover:shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-2xl">
-                Invalid Generation Request
-              </CardTitle>
-              <CardDescription className="text-base">
-                Missing required parameters for newsletter generation.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button
-                onClick={handleBackToDashboard}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
-              </Button>
-            </CardContent>
-          </Card>
+      <div className="min-h-screen relative">
+        <div className="absolute inset-0 grid-pattern pointer-events-none" />
+        <div className="relative container mx-auto py-12 px-6 lg:px-8">
+          <div className="glass-card rounded-xl p-8">
+            <h2 className="text-2xl font-semibold text-white mb-2">
+              Invalid Generation Request
+            </h2>
+            <p className="text-slate-400 mb-6">
+              Missing required parameters for newsletter generation.
+            </p>
+            <Button
+              onClick={handleBackToDashboard}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg shadow-blue-500/25"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Dashboard
+            </Button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 dark:from-black dark:to-gray-950">
-      <div className="container mx-auto py-12 px-6 lg:px-8 space-y-8">
+    <div className="min-h-screen relative">
+      {/* Background effects */}
+      <div className="absolute inset-0 grid-pattern pointer-events-none" />
+      <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-[128px] pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-600/10 rounded-full blur-[128px] pointer-events-none" />
+      
+      <div className="relative container mx-auto py-12 px-6 lg:px-8 space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -343,21 +345,21 @@ export function NewsletterGenerationPage() {
               size="sm"
               onClick={handleBackToDashboard}
               disabled={isLoading}
-              className="hover:bg-accent"
+              className="text-slate-400 hover:text-white hover:bg-slate-800"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
             </Button>
-            <div className="h-4 w-px bg-border" />
+            <div className="h-4 w-px bg-slate-700" />
             <div>
-              <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+              <h1 className="text-3xl font-bold tracking-tight text-white">
                 Newsletter Generation
               </h1>
             </div>
           </div>
           {isLoading && (
-            <div className="flex items-center gap-2 text-base">
-              <div className="inline-flex size-8 items-center justify-center rounded-md bg-gradient-to-br from-blue-600 to-purple-600 text-white animate-pulse">
+            <div className="flex items-center gap-2 text-base text-slate-300">
+              <div className="inline-flex size-8 items-center justify-center rounded-md bg-gradient-to-br from-blue-600 to-purple-600 text-white animate-pulse shadow-lg shadow-blue-500/25">
                 <Sparkles className="h-4 w-4" />
               </div>
               <span className="font-medium">Generating newsletter...</span>
@@ -390,21 +392,21 @@ export function NewsletterGenerationPage() {
 
           if (isNoArticlesError) {
             return (
-              <Card className="border-amber-500 bg-amber-50 dark:bg-amber-950/20">
-                <CardHeader>
-                  <CardTitle className="text-xl text-amber-700 dark:text-amber-400 flex items-center gap-2">
+              <div className="glass-card rounded-xl overflow-hidden border border-amber-500/30">
+                <div className="p-6 border-b border-slate-800">
+                  <h3 className="text-xl font-semibold text-amber-400 flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
                     No Articles Found
-                  </CardTitle>
-                  <CardDescription className="text-base text-amber-600 dark:text-amber-300">
+                  </h3>
+                  <p className="text-amber-300/80 mt-1">
                     We couldn't find any articles for the selected feeds and date range.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="text-sm text-amber-700 dark:text-amber-300 space-y-2">
-                    <p><strong>This could happen because:</strong></p>
+                  </p>
+                </div>
+                <div className="p-6 space-y-4">
+                  <div className="text-sm text-amber-300/70 space-y-2">
+                    <p><strong className="text-amber-300">This could happen because:</strong></p>
                     <ul className="list-disc list-inside space-y-1 ml-2">
                       <li>The selected feeds haven't published any articles in this date range</li>
                       <li>The date range is too narrow</li>
@@ -414,56 +416,54 @@ export function NewsletterGenerationPage() {
                   <div className="flex gap-3">
                     <Button
                       onClick={handleBackToDashboard}
-                      className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                      className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg shadow-blue-500/25"
                     >
                       <ArrowLeft className="h-4 w-4 mr-2" />
                       Back to Dashboard
                     </Button>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             );
           }
 
           // For other errors, show a cleaner error card
           return (
-            <Card className="border-red-500 bg-red-50 dark:bg-red-950/20">
-              <CardHeader>
-                <CardTitle className="text-xl text-red-700 dark:text-red-400">
+            <div className="glass-card rounded-xl overflow-hidden border border-red-500/30">
+              <div className="p-6 border-b border-slate-800">
+                <h3 className="text-xl font-semibold text-red-400">
                   Generation Failed
-                </CardTitle>
-                <CardDescription className="text-base text-red-600 dark:text-red-300">
+                </h3>
+                <p className="text-red-300/80 mt-1">
                   Something went wrong while generating your newsletter.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
+                </p>
+              </div>
+              <div className="p-6 space-y-4">
                 {!!error && (
-                  <div className="text-sm bg-red-100 dark:bg-red-900/30 p-3 rounded-md text-red-800 dark:text-red-200">
+                  <div className="text-sm bg-red-500/10 border border-red-500/20 p-3 rounded-lg text-red-300">
                     {errorMessage}
                   </div>
                 )}
                 <Button
                   onClick={handleBackToDashboard}
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg shadow-blue-500/25"
                 >
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Back to Dashboard
                 </Button>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           );
         })()}
 
         {/* If generation hasn't started yet */}
         {!isLoading && !newsletter?.body && !completion && (
-          <Card className="transition-all hover:shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-2xl">Preparing to Generate</CardTitle>
-              <CardDescription className="text-base">
-                Setting up newsletter generation...
-              </CardDescription>
-            </CardHeader>
-          </Card>
+          <div className="glass-card rounded-xl p-8">
+            <h2 className="text-2xl font-semibold text-white mb-2">Preparing to Generate</h2>
+            <p className="text-slate-400">
+              Setting up newsletter generation...
+            </p>
+          </div>
         )}
       </div>
     </div>

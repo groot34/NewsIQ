@@ -35,13 +35,13 @@ export function DashboardHeader() {
   ];
 
   return (
-    <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="border-b border-slate-800 bg-[#0d1220]/95 backdrop-blur supports-[backdrop-filter]:bg-[#0d1220]/80">
       <div className="container mx-auto px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo/Brand */}
           <div className="flex items-center gap-8">
             <Link href="/dashboard" className="flex items-center gap-2">
-              <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <span className="text-xl font-bold premium-gradient-text">
                 NewsIQ
               </span>
             </Link>
@@ -64,8 +64,9 @@ export function DashboardHeader() {
                       size="sm"
                       className={cn(
                         "gap-2 transition-all",
-                        isActive &&
-                          "bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium hover:from-blue-700 hover:to-purple-700",
+                        isActive
+                          ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium hover:from-blue-700 hover:to-purple-700"
+                          : "text-slate-400 hover:text-white hover:bg-slate-800",
                       )}
                     >
                       <Icon className="h-4 w-4" />
@@ -81,7 +82,11 @@ export function DashboardHeader() {
           <div className="flex items-center gap-3">
             <PlanBadge />
             <SignOutButton>
-              <Button variant="outline" size="sm" className="gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-2 border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800 hover:border-slate-600"
+              >
                 <LogOut className="h-4 w-4" />
                 <span className="hidden sm:inline">Sign Out</span>
               </Button>
@@ -90,7 +95,7 @@ export function DashboardHeader() {
         </div>
 
         {/* Mobile Navigation */}
-        <nav className="md:hidden flex items-center gap-1 pb-3">
+        <nav className="md:hidden flex items-center gap-1 pb-3 overflow-x-auto">
           {navItems.map((item) => {
             const isActive =
               pathname === item.href ||
@@ -106,9 +111,10 @@ export function DashboardHeader() {
                   variant={isActive ? "secondary" : "ghost"}
                   size="sm"
                   className={cn(
-                    "gap-2 transition-all",
-                    isActive &&
-                      "bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium hover:from-blue-700 hover:to-purple-700",
+                    "gap-2 transition-all shrink-0",
+                    isActive
+                      ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium hover:from-blue-700 hover:to-purple-700"
+                      : "text-slate-400 hover:text-white hover:bg-slate-800",
                   )}
                 >
                   <Icon className="h-4 w-4" />

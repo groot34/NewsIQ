@@ -1,30 +1,29 @@
 import { auth } from "@clerk/nextjs/server";
-import { Crown, Settings as SettingsIcon } from "lucide-react";
+import { Settings as SettingsIcon } from "lucide-react";
 import { getCurrentUserSettings } from "@/actions/user-settings";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { PricingCards } from "@/components/dashboard/pricing-cards";
 import { SettingsForm } from "@/components/dashboard/settings-form";
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 
 export default async function SettingsPage() {
-  const { userId, has } = await auth();
+  const { userId } = await auth();
 
   if (!userId) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 dark:from-black dark:to-gray-950">
-        <div className="container mx-auto py-12 px-6 lg:px-8">
-          <Card className="transition-all hover:shadow-lg">
+      <div className="min-h-screen relative">
+        <div className="absolute inset-0 grid-pattern pointer-events-none" />
+        <div className="relative container mx-auto py-12 px-6 lg:px-8">
+          <Card className="glass-card border-slate-800">
             <CardHeader>
-              <CardTitle className="text-2xl">
+              <CardTitle className="text-2xl text-white">
                 Authentication Required
               </CardTitle>
-              <CardDescription className="text-base">
+              <CardDescription className="text-base text-slate-400">
                 Please sign in to access settings.
               </CardDescription>
             </CardHeader>
@@ -34,23 +33,22 @@ export default async function SettingsPage() {
     );
   }
 
-  const isPro = true; // Enabled for all users
   const settings = await getCurrentUserSettings();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 dark:from-black dark:to-gray-950">
-      <div className="container mx-auto py-12 px-6 lg:px-8 space-y-12">
+    <div className="min-h-screen relative">
+      {/* Background effects */}
+      <div className="absolute inset-0 grid-pattern pointer-events-none" />
+      <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-[128px] pointer-events-none" />
+      
+      <div className="relative container mx-auto py-12 px-6 lg:px-8 space-y-12">
         {/* Header */}
         <PageHeader
           icon={SettingsIcon}
           title="Settings"
-          description="Configure default settings for your newsletter generation. These settings will be automatically applied to all newsletters you create."
+          description="Configure default settings for your newsletter generation"
         />
 
-        {/* Free User Upgrade Prompt */}
-        {/* Free User Upgrade Prompt Removed */}
-
-        {/* Settings Form */}
         {/* Settings Form */}
         <SettingsForm initialSettings={settings} />
       </div>

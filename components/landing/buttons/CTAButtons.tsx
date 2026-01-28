@@ -5,18 +5,17 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 async function CTAButtons() {
-  // const { has, userId } = await auth();
-  // const hasPaidPlan =
-  //   (await has({ plan: "pro" })) || (await has({ plan: "starter" }));
   const { userId } = await auth();
-  const hasPaidPlan = true;
 
   return (
     <>
       {/* Signed out users */}
       <SignedOut>
-        <SignInButton mode="modal" forceRedirectUrl="/#pricing">
-          <Button size="lg" className="w-full sm:w-auto">
+        <SignInButton mode="modal" forceRedirectUrl="/dashboard">
+          <Button 
+            size="lg" 
+            className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg shadow-blue-500/25 transition-all hover:shadow-xl hover:shadow-blue-500/30"
+          >
             Get Started <ArrowRight className="ml-2 size-4" />
           </Button>
         </SignInButton>
@@ -24,44 +23,27 @@ async function CTAButtons() {
           asChild
           size="lg"
           variant="outline"
-          className="w-full sm:w-auto"
+          className="w-full sm:w-auto border-slate-700 bg-transparent text-slate-300 hover:bg-slate-800 hover:text-white hover:border-slate-600"
         >
-          <Link href="#pricing">View Pricing</Link>
+          <Link href="#how-it-works">Learn More</Link>
         </Button>
       </SignedOut>
 
-      {/* Signed in users with a plan */}
-      {userId && hasPaidPlan && (
-        <SignedIn>
-          <Button size="lg" className="w-full sm:w-auto" asChild>
-            <Link
-              href="/dashboard"
-              className="flex items-center justify-center"
-            >
-              Go to Dashboard <ArrowRight className="ml-2 size-4" />
-            </Link>
-          </Button>
-        </SignedIn>
-      )}
-
-      {/* Signed in users without a plan */}
-      {userId && !hasPaidPlan && (
-        <SignedIn>
-          <Button size="lg" className="w-full sm:w-auto" asChild>
-            <Link href="/#pricing" className="flex items-center justify-center">
-              Choose a Plan <ArrowRight className="ml-2 size-4" />
-            </Link>
-          </Button>
-          <Button
-            asChild
-            size="lg"
-            variant="outline"
-            className="w-full sm:w-auto"
+      {/* Signed in users */}
+      <SignedIn>
+        <Button 
+          size="lg" 
+          className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg shadow-blue-500/25 transition-all hover:shadow-xl hover:shadow-blue-500/30" 
+          asChild
+        >
+          <Link
+            href="/dashboard"
+            className="flex items-center justify-center"
           >
-            <Link href="#pricing">View Pricing</Link>
-          </Button>
-        </SignedIn>
-      )}
+            Go to Dashboard <ArrowRight className="ml-2 size-4" />
+          </Link>
+        </Button>
+      </SignedIn>
     </>
   );
 }

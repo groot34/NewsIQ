@@ -5,8 +5,13 @@ import { RssFeedManager } from "@/components/dashboard/rss-feed-manager";
 
 async function Dashboard() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 dark:from-black dark:to-gray-950">
-      <div className="container mx-auto py-12 px-6 lg:px-8 space-y-12">
+    <div className="min-h-screen relative">
+      {/* Background effects */}
+      <div className="absolute inset-0 grid-pattern pointer-events-none" />
+      <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-[128px] pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-600/10 rounded-full blur-[128px] pointer-events-none" />
+      
+      <div className="relative container mx-auto py-12 px-6 lg:px-8 space-y-12">
         {/* Page Header */}
         <PageHeader
           icon={Sparkles}

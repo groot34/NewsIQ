@@ -6,13 +6,6 @@ import * as React from "react";
 import { toast } from "sonner";
 import { deleteNewsletterAction } from "@/actions/delete-newsletter";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { NewsletterDisplay } from "./newsletter-display";
 
 interface Newsletter {
@@ -65,14 +58,17 @@ export function NewsletterHistoryView({
     });
   };
 
-  // No-op save function since newsletter is already saved
   const handleSave = async () => {
-    // Newsletter is already saved, this is just for component compatibility
+    // Newsletter is already saved
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 dark:from-black dark:to-gray-950">
-      <div className="container mx-auto py-12 px-6 lg:px-8 space-y-8">
+    <div className="min-h-screen relative">
+      {/* Background effects */}
+      <div className="absolute inset-0 grid-pattern pointer-events-none" />
+      <div className="absolute top-0 right-0 w-96 h-96 bg-purple-600/10 rounded-full blur-[128px] pointer-events-none" />
+      
+      <div className="relative container mx-auto py-12 px-6 lg:px-8 space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -80,14 +76,14 @@ export function NewsletterHistoryView({
               variant="ghost"
               size="sm"
               onClick={handleBackToHistory}
-              className="hover:bg-accent"
+              className="text-slate-400 hover:text-white hover:bg-slate-800"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to History
             </Button>
-            <div className="h-4 w-px bg-border" />
+            <div className="h-4 w-px bg-slate-700" />
             <div>
-              <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+              <h1 className="text-3xl font-bold tracking-tight text-white">
                 Newsletter
               </h1>
             </div>
@@ -97,7 +93,7 @@ export function NewsletterHistoryView({
             size="sm"
             onClick={handleDelete}
             disabled={isPending}
-            className="hover:bg-destructive/90 transition-all"
+            className="bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30"
           >
             <Trash2 className="h-4 w-4 mr-2" />
             {isPending ? "Deleting..." : "Delete"}
@@ -105,10 +101,10 @@ export function NewsletterHistoryView({
         </div>
 
         {/* Metadata Card */}
-        <Card className="transition-all hover:shadow-lg border-2 border-blue-600/20 dark:border-blue-500/20">
-          <CardHeader>
-            <CardTitle className="text-xl">Newsletter Information</CardTitle>
-            <CardDescription className="text-base">
+        <div className="glass-card rounded-xl overflow-hidden border border-blue-500/30">
+          <div className="p-6 border-b border-slate-800">
+            <h3 className="text-xl font-semibold text-white">Newsletter Information</h3>
+            <p className="text-slate-400 mt-1">
               Generated on{" "}
               {new Date(newsletter.createdAt).toLocaleDateString("en-US", {
                 month: "long",
@@ -117,17 +113,17 @@ export function NewsletterHistoryView({
                 hour: "numeric",
                 minute: "2-digit",
               })}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+            </p>
+          </div>
+          <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
               <div className="flex items-start gap-3">
-                <div className="inline-flex size-8 items-center justify-center rounded-md bg-gradient-to-br from-blue-600 to-purple-600 text-white shrink-0 mt-0.5">
+                <div className="inline-flex size-8 items-center justify-center rounded-md bg-gradient-to-br from-blue-600 to-purple-600 text-white shrink-0 mt-0.5 shadow-lg shadow-blue-500/25">
                   <Calendar className="h-4 w-4" />
                 </div>
                 <div>
-                  <p className="font-semibold text-base">Date Range</p>
-                  <p className="text-muted-foreground">
+                  <p className="font-semibold text-base text-white">Date Range</p>
+                  <p className="text-slate-400">
                     {new Date(newsletter.startDate).toLocaleDateString(
                       "en-US",
                       {
@@ -147,12 +143,12 @@ export function NewsletterHistoryView({
               </div>
 
               <div className="flex items-start gap-3">
-                <div className="inline-flex size-8 items-center justify-center rounded-md bg-gradient-to-br from-blue-600 to-purple-600 text-white shrink-0 mt-0.5">
+                <div className="inline-flex size-8 items-center justify-center rounded-md bg-gradient-to-br from-blue-600 to-purple-600 text-white shrink-0 mt-0.5 shadow-lg shadow-blue-500/25">
                   <FileText className="h-4 w-4" />
                 </div>
                 <div>
-                  <p className="font-semibold text-base">Feeds Used</p>
-                  <p className="text-muted-foreground">
+                  <p className="font-semibold text-base text-white">Feeds Used</p>
+                  <p className="text-slate-400">
                     {newsletter.feedsUsed.length} RSS feed
                     {newsletter.feedsUsed.length !== 1 ? "s" : ""}
                   </p>
@@ -161,22 +157,22 @@ export function NewsletterHistoryView({
 
               {newsletter.userInput && (
                 <div className="flex items-start gap-3">
-                  <div className="inline-flex size-8 items-center justify-center rounded-md bg-gradient-to-br from-blue-600 to-purple-600 text-white shrink-0 mt-0.5">
+                  <div className="inline-flex size-8 items-center justify-center rounded-md bg-gradient-to-br from-blue-600 to-purple-600 text-white shrink-0 mt-0.5 shadow-lg shadow-blue-500/25">
                     <Clock className="h-4 w-4" />
                   </div>
                   <div>
-                    <p className="font-semibold text-base">Custom Context</p>
-                    <p className="text-muted-foreground line-clamp-2">
+                    <p className="font-semibold text-base text-white">Custom Context</p>
+                    <p className="text-slate-400 line-clamp-2">
                       {newsletter.userInput}
                     </p>
                   </div>
                 </div>
               )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        {/* Newsletter Display (without save button) */}
+        {/* Newsletter Display */}
         <NewsletterDisplay
           newsletter={{
             suggestedTitles: newsletter.suggestedTitles,

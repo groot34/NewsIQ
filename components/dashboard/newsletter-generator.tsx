@@ -1,12 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { getRssFeedsByUserId } from "@/actions/rss-feed";
 import { upsertUserFromClerk } from "@/actions/user";
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { NewsletterForm } from "./newsletter-form";
 
 export async function NewsletterGenerator() {
@@ -16,14 +10,12 @@ export async function NewsletterGenerator() {
 
   if (feeds.length === 0) {
     return (
-      <Card className="transition-all hover:shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-2xl">Generate Newsletter</CardTitle>
-          <CardDescription className="text-base">
-            Add RSS feeds first to generate newsletters
-          </CardDescription>
-        </CardHeader>
-      </Card>
+      <div className="glass-card rounded-xl p-6">
+        <h2 className="text-2xl font-semibold text-white">Generate Newsletter</h2>
+        <p className="text-slate-400 mt-2">
+          Add RSS feeds first to generate newsletters
+        </p>
+      </div>
     );
   }
 

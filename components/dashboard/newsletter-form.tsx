@@ -5,13 +5,6 @@ import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -56,7 +49,6 @@ export function NewsletterForm({ feeds }: NewsletterFormProps) {
       return;
     }
 
-    // Navigate to generation page with parameters
     const params = new URLSearchParams({
       feedIds: JSON.stringify(selectedFeeds),
       startDate: dateRange.from.toISOString(),
@@ -72,88 +64,105 @@ export function NewsletterForm({ feeds }: NewsletterFormProps) {
 
   return (
     <div className="space-y-6">
-      <Card className="transition-all hover:shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-2xl">Generate Newsletter</CardTitle>
-          <CardDescription className="text-base">
-            Select date range, feeds, and add context to generate your
-            AI-powered newsletter
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
+      <div className="glass-card rounded-xl overflow-hidden">
+        {/* Header */}
+        <div className="p-6 border-b border-slate-800">
+          <h2 className="text-2xl font-semibold text-white">Generate Newsletter</h2>
+          <p className="text-slate-400 mt-1">
+            Select date range, feeds, and add context to generate your AI-powered newsletter
+          </p>
+        </div>
+        
+        {/* Content */}
+        <div className="p-6 space-y-6">
+          {/* Date Range */}
           <div className="space-y-2">
-            <Label className="text-base font-semibold">Date Range</Label>
+            <Label className="text-base font-semibold text-white">Date Range</Label>
             <DateRangePicker value={dateRange} onChange={setDateRange} />
           </div>
 
+          {/* Feed Selection */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Label className="text-base font-semibold">Select Feeds</Label>
+              <Label className="text-base font-semibold text-white">Select Feeds</Label>
               {!allSelected && (
-                <Button variant="ghost" size="sm" onClick={handleSelectAll}>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleSelectAll}
+                  className="text-slate-400 hover:text-white hover:bg-slate-800"
+                >
                   Select All
                 </Button>
               )}
               {allSelected && (
-                <Button variant="ghost" size="sm" onClick={handleDeselectAll}>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleDeselectAll}
+                  className="text-slate-400 hover:text-white hover:bg-slate-800"
+                >
                   Deselect All
                 </Button>
               )}
             </div>
-            <div className="border rounded-lg p-4 space-y-3 max-h-60 overflow-y-auto">
+            <div className="border border-slate-700 bg-slate-800/50 rounded-lg p-4 space-y-3 max-h-60 overflow-y-auto">
               {feeds.map((feed) => (
                 <div key={feed.id} className="flex items-center space-x-2">
                   <Checkbox
                     id={feed.id}
                     checked={selectedFeeds.includes(feed.id)}
                     onCheckedChange={() => handleToggleFeed(feed.id)}
+                    className="border-slate-600 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                   />
                   <Label
                     htmlFor={feed.id}
-                    className="text-sm font-normal cursor-pointer flex-1"
+                    className="text-sm font-normal cursor-pointer flex-1 text-slate-300"
                   >
                     {feed.title || feed.url}
                   </Label>
                 </div>
               ))}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-slate-500">
               {selectedFeeds.length} of {feeds.length} feeds selected
             </p>
           </div>
 
+          {/* Additional Context */}
           <div className="space-y-2">
-            <Label htmlFor="user-input" className="text-base font-semibold">
+            <Label htmlFor="user-input" className="text-base font-semibold text-white">
               Additional Context{" "}
-              <span className="text-muted-foreground font-normal">
+              <span className="text-slate-500 font-normal">
                 (Optional)
               </span>
             </Label>
             <Textarea
               id="user-input"
-              placeholder="Add any specific instructions, tone preferences, target audience details, or topics to focus on... (e.g., 'Include issue number 99', 'Focus on security topics', 'Keep it casual')"
+              placeholder="Add any specific instructions, tone preferences, target audience details, or topics to focus on..."
               value={userInput}
               onChange={(e) => setUserInput(e.target.value)}
               rows={4}
+              className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-blue-500"
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-slate-500">
               Your instructions will be prioritized and incorporated into the
-              newsletter. Default settings from the Settings page will also be
-              applied.
+              newsletter.
             </p>
           </div>
 
+          {/* Generate Button */}
           <Button
             onClick={handleGenerate}
             disabled={selectedFeeds.length === 0}
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg shadow-blue-500/25 disabled:opacity-50"
             size="lg"
           >
             <Sparkles className="h-4 w-4 mr-2" />
             Generate Newsletter
           </Button>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
