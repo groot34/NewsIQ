@@ -1,7 +1,7 @@
 import { Sparkles } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
-// import { NewsletterGenerator } from "@/components/dashboard/newsletter-generator";
- import { RssFeedManager } from "@/components/dashboard/rss-feed-manager";
+import { NewsletterGenerator } from "@/components/dashboard/newsletter-generator"
+import { RssFeedManager } from "@/components/dashboard/rss-feed-manager";
 
 async function Dashboard() {
   return (
@@ -23,7 +23,7 @@ async function Dashboard() {
 
           {/* Right Column - Newsletter Generator */}
           <div>
-            {/* <NewsletterGenerator /> */}
+            <NewsletterGenerator />
           </div>
         </div>
       </div>
