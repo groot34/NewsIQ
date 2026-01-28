@@ -38,6 +38,24 @@ export function AddFeedDialog({
   const [isOpen, setIsOpen] = React.useState(false);
   const [newFeedUrl, setNewFeedUrl] = React.useState("");
   const [isAdding, setIsAdding] = React.useState(false);
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <>
+        {trigger || (
+          <Button size="sm">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Feed
+          </Button>
+        )}
+      </>
+    );
+  }
 
   const handleAddFeed = async () => {
     if (!newFeedUrl.trim()) {
