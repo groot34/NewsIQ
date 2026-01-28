@@ -77,6 +77,12 @@ IMPORTANT RULES:
     return result.toTextStreamResponse();
   } catch (e) {
     console.error(e);
-    return Response.json({ error: "Failed" }, { status: 500 });
+    const message = e instanceof Error ? e.message : "Failed to generate newsletter";
+    
+    if (message.includes("No articles found")) {
+      return Response.json({ error: message }, { status: 404 });
+    }
+    
+    return Response.json({ error: message }, { status: 500 });
   }
 }

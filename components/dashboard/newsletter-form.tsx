@@ -33,11 +33,6 @@ export function NewsletterForm({ feeds }: NewsletterFormProps) {
   const [userInput, setUserInput] = React.useState("");
   const [selectedFeeds, setSelectedFeeds] = React.useState<string[]>([]);
 
-  // Initialize with all feeds selected
-  React.useEffect(() => {
-    setSelectedFeeds(feeds.map((f) => f.id));
-  }, [feeds]);
-
   const allSelected = selectedFeeds.length === feeds.length;
 
   const handleSelectAll = () => setSelectedFeeds(feeds.map((f) => f.id));

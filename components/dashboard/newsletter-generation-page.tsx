@@ -124,6 +124,18 @@ export function NewsletterGenerationPage() {
       });
 
       if (!response.ok) {
+        // Try to parse error message from response
+        try {
+          const errorData = await response.json();
+          if (errorData.error) {
+            throw new Error(errorData.error);
+          }
+        } catch (parseError) {
+          // If parsing fails, throw generic error
+          if (parseError instanceof Error && parseError.message !== "Unexpected end of JSON input") {
+            throw parseError;
+          }
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
@@ -232,17 +244,14 @@ export function NewsletterGenerationPage() {
     startGeneration();
   }, [params]);
 
-  // Track if we've already auto-saved this generation
-  const hasAutoSavedRef = React.useRef(false);
+  // Track if we've already shown the success toast for this generation
+  const hasShownToastRef = React.useRef(false);
 
-  // Show success toast when generation completes
+  // Show success toast when generation completes (no auto-save)
   React.useEffect(() => {
-    if (!isLoading && newsletter?.body && articlesCount > 0 && !hasAutoSavedRef.current) {
+    if (!isLoading && newsletter?.body && articlesCount > 0 && !hasShownToastRef.current) {
       toast.success(`Newsletter generated from ${articlesCount} articles!`);
-      
-      // Auto-save logic
-      hasAutoSavedRef.current = true;
-      handleSave();
+      hasShownToastRef.current = true;
     }
   }, [isLoading, newsletter?.body, articlesCount]);
 
@@ -374,32 +383,76 @@ export function NewsletterGenerationPage() {
           </div>
         )}
 
-        {/* Debug: Show raw completion if parsing fails */}
-        {(!isLoading && !newsletter?.body && (Boolean(completion) || Boolean(error))) && (
-          <Card className="border-red-500">
-            <CardHeader>
-              <CardTitle className="text-red-500">Debug: Generation Failed</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {!!error && (
-                <div className="mb-4">
-                  <strong>Error:</strong>
-                  <pre className="whitespace-pre-wrap text-xs bg-red-50 p-2 rounded text-red-800">
-                    {error instanceof Error ? error.message : String(error)}
-                  </pre>
-                </div>
-              )}
-              {completion && (
-                <div>
-                  <strong>Raw Output:</strong>
-                  <pre className="whitespace-pre-wrap text-xs bg-gray-100 p-4 rounded overflow-auto max-h-96">
-                    {completion}
-                  </pre>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
+        {/* Show user-friendly error message */}
+        {(!isLoading && !newsletter?.body && (Boolean(completion) || Boolean(error))) && (() => {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          const isNoArticlesError = errorMessage.includes("No articles found");
+
+          if (isNoArticlesError) {
+            return (
+              <Card className="border-amber-500 bg-amber-50 dark:bg-amber-950/20">
+                <CardHeader>
+                  <CardTitle className="text-xl text-amber-700 dark:text-amber-400 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    No Articles Found
+                  </CardTitle>
+                  <CardDescription className="text-base text-amber-600 dark:text-amber-300">
+                    We couldn't find any articles for the selected feeds and date range.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="text-sm text-amber-700 dark:text-amber-300 space-y-2">
+                    <p><strong>This could happen because:</strong></p>
+                    <ul className="list-disc list-inside space-y-1 ml-2">
+                      <li>The selected feeds haven't published any articles in this date range</li>
+                      <li>The date range is too narrow</li>
+                      <li>The RSS feeds might be temporarily unavailable</li>
+                    </ul>
+                  </div>
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={handleBackToDashboard}
+                      className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                    >
+                      <ArrowLeft className="h-4 w-4 mr-2" />
+                      Back to Dashboard
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          }
+
+          // For other errors, show a cleaner error card
+          return (
+            <Card className="border-red-500 bg-red-50 dark:bg-red-950/20">
+              <CardHeader>
+                <CardTitle className="text-xl text-red-700 dark:text-red-400">
+                  Generation Failed
+                </CardTitle>
+                <CardDescription className="text-base text-red-600 dark:text-red-300">
+                  Something went wrong while generating your newsletter.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {!!error && (
+                  <div className="text-sm bg-red-100 dark:bg-red-900/30 p-3 rounded-md text-red-800 dark:text-red-200">
+                    {errorMessage}
+                  </div>
+                )}
+                <Button
+                  onClick={handleBackToDashboard}
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back to Dashboard
+                </Button>
+              </CardContent>
+            </Card>
+          );
+        })()}
 
         {/* If generation hasn't started yet */}
         {!isLoading && !newsletter?.body && !completion && (
