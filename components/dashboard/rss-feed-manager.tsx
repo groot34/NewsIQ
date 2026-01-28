@@ -37,7 +37,16 @@ export async function RssFeedManager() {
       <CardHeader>
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="min-w-0 flex-1">
-            <CardTitle className="text-2xl">RSS Feeds</CardTitle>
+            <div className="flex items-center gap-3">
+              <CardTitle className="text-2xl">RSS Feeds</CardTitle>
+              <span className={`text-sm font-medium px-2 py-0.5 rounded-full ${
+                feeds.length >= feedLimit 
+                  ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' 
+                  : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+              }`}>
+                {feeds.length}/{feedLimit}
+              </span>
+            </div>
             <CardDescription className="text-base">
               Manage your RSS feed sources{" "}
             </CardDescription>
@@ -48,6 +57,14 @@ export async function RssFeedManager() {
             isPro={isPro}
           />
         </div>
+        {feeds.length >= feedLimit && (
+          <div className="mt-3 flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 p-3 rounded-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <span>You've reached the maximum of {feedLimit} feeds. Remove a feed to add a new one.</span>
+          </div>
+        )}
       </CardHeader>
       <CardContent>
         {feeds.length === 0 ? (
