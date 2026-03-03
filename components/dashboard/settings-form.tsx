@@ -120,7 +120,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
   const labelStyles = "text-slate-300";
 
   return (
-    <div className="max-w-4xl space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6">
       {/* Basic Information */}
       <div className="glass-card rounded-xl overflow-hidden">
         <div className="p-6 border-b border-slate-800">

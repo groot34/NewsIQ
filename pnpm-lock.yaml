@@ -38,6 +38,9 @@ importers:
       ai:
         specifier: ^6.0.57
         version: 6.0.57(zod@4.3.6)
+      best-effort-json-parser:
+        specifier: ^1.2.1
+        version: 1.2.1
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -1253,6 +1256,9 @@ packages:
   baseline-browser-mapping@2.9.16:
     resolution: {integrity: sha512-KeUZdBuxngy825i8xvzaK1Ncnkx0tBmb3k8DkEuqjKRkmtvNTjey2ZsNeh8Dw4lfKvbCOu9oeNx2TKm2vHqcRw==}
     hasBin: true
+
+  best-effort-json-parser@1.2.1:
+    resolution: {integrity: sha512-UICSLibQdzS1f+PBsi3u2YE3SsdXcWicHUg3IMvfuaePS2AYnZJdJeKhGv5OM8/mqJwPt79aDrEJ1oa84tELvw==}
 
   body-parser@2.2.2:
     resolution: {integrity: sha512-oP5VkATKlNwcgvxi0vM0p/D3n2C3EReYVX+DNYs5TjZFn/oQt2j+4sVJtSMr18pdRr8wjTcBl6LoV+FUwzPmNA==}
@@ -4028,6 +4034,8 @@ snapshots:
   bail@2.0.2: {}
 
   baseline-browser-mapping@2.9.16: {}
+
+  best-effort-json-parser@1.2.1: {}
 
   body-parser@2.2.2:
     dependencies:

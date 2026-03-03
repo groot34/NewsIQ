@@ -210,44 +210,52 @@ export function NewsletterDisplay({
                 </div>
                 <CopyButton field="body" text={newsletter.body} />
               </div>
-              <div className="p-6 max-h-[600px] overflow-y-auto">
-                <div className="prose prose-invert prose-slate max-w-none prose-headings:text-white prose-p:text-slate-300 prose-strong:text-white prose-blockquote:border-blue-500 prose-blockquote:text-slate-400">
-                  {newsletter.body.split("\n").map((paragraph, index) => {
-                    const trimmed = paragraph.trim();
-                    if (!trimmed) return <br key={index} />;
-                    
-                    // Check for headings
-                    if (trimmed.startsWith("##")) {
+              <div className="p-5 overflow-y-auto max-h-[620px]">
+                <div className="space-y-0 text-slate-300 text-sm leading-relaxed">
+                  {newsletter.body
+                    .split("\n")
+                    .filter((line) => line.trim() !== "")
+                    .map((line, index) => {
+                      const trimmed = line.trim();
+
+                      // H2 heading
+                      if (trimmed.startsWith("## ")) {
+                        return (
+                          <h3 key={index} className="text-base font-semibold text-white mt-4 mb-2 first:mt-0">
+                            {trimmed.replace(/^##\s*/, "")}
+                          </h3>
+                        );
+                      }
+                      // H1 heading
+                      if (trimmed.startsWith("# ")) {
+                        return (
+                          <h2 key={index} className="text-lg font-bold text-white mt-4 mb-2 first:mt-0">
+                            {trimmed.replace(/^#\s*/, "")}
+                          </h2>
+                        );
+                      }
+                      // Blockquote
+                      if (trimmed.startsWith("> ")) {
+                        return (
+                          <blockquote key={index} className="border-l-2 border-blue-500 pl-3 my-2 italic text-slate-400 text-sm">
+                            {trimmed.replace(/^>\s*/, "")}
+                          </blockquote>
+                        );
+                      }
+                      // Regular paragraph — render inline bold/italic
+                      const html = trimmed
+                        .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+                        .replace(/\*(.+?)\*/g, "<em>$1</em>")
+                        .replace(/`(.+?)`/g, '<code class="bg-slate-700 px-1 rounded text-xs">$1</code>');
                       return (
-                        <h3 key={index} className="text-lg font-semibold text-white mt-6 mb-3">
-                          {trimmed.replace(/^#+\s*/, "")}
-                        </h3>
+                        <p
+                          key={index}
+                          className="mb-3"
+                          // eslint-disable-next-line react/no-danger
+                          dangerouslySetInnerHTML={{ __html: html }}
+                        />
                       );
-                    }
-                    if (trimmed.startsWith("#")) {
-                      return (
-                        <h2 key={index} className="text-xl font-bold text-white mt-6 mb-3">
-                          {trimmed.replace(/^#+\s*/, "")}
-                        </h2>
-                      );
-                    }
-                    
-                    // Check for blockquotes
-                    if (trimmed.startsWith(">")) {
-                      return (
-                        <blockquote key={index} className="border-l-2 border-blue-500 pl-4 my-4 italic text-slate-400">
-                          {trimmed.replace(/^>\s*/, "")}
-                        </blockquote>
-                      );
-                    }
-                    
-                    // Regular paragraph
-                    return (
-                      <p key={index} className="text-slate-300 leading-relaxed mb-4">
-                        {trimmed}
-                      </p>
-                    );
-                  })}
+                    })}
                 </div>
               </div>
             </div>

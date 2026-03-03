@@ -1,6 +1,6 @@
 "use client";
 
-import { useCompletion } from "@ai-sdk/react";
+import { parse as parsePartialJson } from "best-effort-json-parser";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
@@ -110,6 +110,13 @@ export function NewsletterGenerationPage() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<unknown>(null);
 
+  // Typewriter animation states — one per section
+  const [animatedBody, setAnimatedBody] = React.useState("");
+  const [animatedAdditionalInfo, setAnimatedAdditionalInfo] = React.useState("");
+  const [animatedTitles, setAnimatedTitles] = React.useState<string[]>([]);
+  const [animatedSubjectLines, setAnimatedSubjectLines] = React.useState<string[]>([]);
+  const [animatedAnnouncements, setAnimatedAnnouncements] = React.useState<string[]>([]);
+
   // Manual stream reader
   const handleStream = async (requestParams: any) => {
     setIsLoading(true);
@@ -161,42 +168,115 @@ export function NewsletterGenerationPage() {
     }
   };
 
-  // Parse dictionary from completion string
+  // Parse newsletter from the streaming completion string.
+  // Uses best-effort-json-parser so partial JSON during streaming
+  // is parsed incrementally, enabling the real-time typewriter effect.
   const newsletter = React.useMemo(() => {
     if (!completion) return undefined;
     try {
       let cleanJson = completion.trim();
-      
-      // Handle Markdown code blocks if present
+
+      // Strip Markdown code fences if the model adds them
       const match = cleanJson.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
       if (match) {
         cleanJson = match[1];
       }
 
-      // Sanitize newlines inside strings
+      // Sanitize literal newlines inside JSON strings
       cleanJson = cleanJsonString(cleanJson);
 
-      // Try to parse partial or full JSON
-      // If valid JSON, return it
-      try {
-        return JSON.parse(cleanJson) as Partial<NewsletterObject>;
-      } catch {
-        // If strict parsing fails (likely due to streaming/partial data), 
-        // we could try a relaxed parser or just wait for valid JSON.
-        // For now, if it fails, we return undefined so it doesn't break the UI.
-        // We can check if it starts with { to at least know it's trying to be JSON
-        if (cleanJson.startsWith('{')) {
-             // In a real app, use a library like 'best-effort-json-parser' here
-             return undefined; 
-        }
-        return undefined;
-      }
+      if (!cleanJson.startsWith('{')) return undefined;
+
+      // parsePartialJson never throws — it returns whatever it can
+      // extract from an incomplete JSON string.
+      const parsed = parsePartialJson(cleanJson) as Partial<NewsletterObject>;
+      return parsed ?? undefined;
     } catch {
       return undefined;
     }
   }, [completion]);
 
+  // ── Typewriter animation effects ──────────────────────────────────────────
+  // All placed after `newsletter` so they can reference it safely.
+
+  // Reset all animated states when a new generation starts
+  React.useEffect(() => {
+    if (isLoading && completion === "") {
+      setAnimatedBody("");
+      setAnimatedAdditionalInfo("");
+      setAnimatedTitles([]);
+      setAnimatedSubjectLines([]);
+      setAnimatedAnnouncements([]);
+    }
+  }, [isLoading, completion]);
+
+  // Body — 2 chars every 25ms
+  React.useEffect(() => {
+    const target = newsletter?.body ?? "";
+    if (animatedBody.length >= target.length) return;
+    const timer = setTimeout(() => {
+      const step = isLoading ? 2 : 30;
+      setAnimatedBody(target.slice(0, animatedBody.length + step));
+    }, 25);
+    return () => clearTimeout(timer);
+  }, [animatedBody, newsletter?.body, isLoading]);
+
+  // Additional info — same pace as body
+  React.useEffect(() => {
+    const target = newsletter?.additionalInfo ?? "";
+    if (!target || animatedAdditionalInfo.length >= target.length) return;
+    const timer = setTimeout(() => {
+      const step = isLoading ? 2 : 30;
+      setAnimatedAdditionalInfo(target.slice(0, animatedAdditionalInfo.length + step));
+    }, 25);
+    return () => clearTimeout(timer);
+  }, [animatedAdditionalInfo, newsletter?.additionalInfo, isLoading]);
+
+  // Titles — one item every 350 ms
+  React.useEffect(() => {
+    const target = newsletter?.suggestedTitles ?? [];
+    if (animatedTitles.length >= target.length) return;
+    const timer = setTimeout(() => {
+      setAnimatedTitles(target.slice(0, animatedTitles.length + 1));
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [animatedTitles, newsletter?.suggestedTitles]);
+
+  // Subject lines — one item every 350 ms
+  React.useEffect(() => {
+    const target = newsletter?.suggestedSubjectLines ?? [];
+    if (animatedSubjectLines.length >= target.length) return;
+    const timer = setTimeout(() => {
+      setAnimatedSubjectLines(target.slice(0, animatedSubjectLines.length + 1));
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [animatedSubjectLines, newsletter?.suggestedSubjectLines]);
+
+  // Announcements — one item every 350 ms
+  React.useEffect(() => {
+    const target = newsletter?.topAnnouncements ?? [];
+    if (animatedAnnouncements.length >= target.length) return;
+    const timer = setTimeout(() => {
+      setAnimatedAnnouncements(target.slice(0, animatedAnnouncements.length + 1));
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [animatedAnnouncements, newsletter?.topAnnouncements]);
+
+  // Merge all animated fields into the object passed to the display component
+  const displayNewsletter = React.useMemo(() => {
+    if (!newsletter) return undefined;
+    return {
+      ...newsletter,
+      body: animatedBody || newsletter.body,
+      additionalInfo: animatedAdditionalInfo || newsletter.additionalInfo,
+      suggestedTitles: animatedTitles.length > 0 ? animatedTitles : newsletter.suggestedTitles,
+      suggestedSubjectLines: animatedSubjectLines.length > 0 ? animatedSubjectLines : newsletter.suggestedSubjectLines,
+      topAnnouncements: animatedAnnouncements.length > 0 ? animatedAnnouncements : newsletter.topAnnouncements,
+    };
+  }, [newsletter, animatedBody, animatedAdditionalInfo, animatedTitles, animatedSubjectLines, animatedAnnouncements]);
+
   // Auto-start generation with pre-flight metadata check
+
   React.useEffect(() => {
     if (!params || hasStartedRef.current) {
       return;
@@ -367,18 +447,18 @@ export function NewsletterGenerationPage() {
           )}
         </div>
 
-        {/* Show loading card while generating */}
-        {isLoading && !newsletter?.body && (
+        {/* Show loading card while generating and body hasn't started yet */}
+        {isLoading && !displayNewsletter?.body && (
           <div className="transition-opacity duration-300 ease-in-out">
             <NewsletterLoadingCard />
           </div>
         )}
 
-        {/* Newsletter display with smooth transition */}
-        {newsletter?.body && (
+        {/* Newsletter display with typewriter body */}
+        {displayNewsletter?.body && (
           <div className="transition-opacity duration-500 ease-in-out animate-in fade-in">
             <NewsletterDisplay
-              newsletter={newsletter}
+              newsletter={displayNewsletter}
               onSave={handleSave}
               isGenerating={isLoading}
             />

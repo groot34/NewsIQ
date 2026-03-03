@@ -65,8 +65,6 @@ IMPORTANT RULES:
     const result = streamText({
       model,
       prompt,
-      // @ts-expect-error Groq provider supports this
-      response_format: { type: 'json_object' },
       onFinish: ({ text, usage }: { text: string; usage: any }) => {
         console.log("Generation finished. Length:", text.length);
         console.log("Snippet:", text.substring(0, 100));
