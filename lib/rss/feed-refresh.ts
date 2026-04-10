@@ -101,9 +101,9 @@ export async function prepareFeedsAndArticles(params: PrepareFeedsParams) {
   const feedsToRefresh = await getFeedsToRefresh(params.feedIds);
 
   if (feedsToRefresh.length > 0) {
-    console.log(
-      `Refreshing ${feedsToRefresh.length} stale feeds (out of ${params.feedIds.length} total)...`,
-    );
+    // console.log(
+    //   `Refreshing ${feedsToRefresh.length} stale feeds (out of ${params.feedIds.length} total)...`,
+    // );
 
     // Refresh all stale feeds in parallel for better performance
     // Using Promise.allSettled so one failure doesn't stop others
@@ -116,13 +116,13 @@ export async function prepareFeedsAndArticles(params: PrepareFeedsParams) {
       (r) => r.status === "fulfilled",
     ).length;
     const failed = refreshResults.filter((r) => r.status === "rejected").length;
-    console.log(
-      `Feed refresh complete: ${successful} successful, ${failed} failed`,
-    );
+    // console.log(
+    //   `Feed refresh complete: ${successful} successful, ${failed} failed`,
+    // );
   } else {
-    console.log(
-      `All ${params.feedIds.length} feeds are fresh (< 3 hours old), skipping refresh`,
-    );
+    // console.log(
+    //   `All ${params.feedIds.length} feeds are fresh (< 3 hours old), skipping refresh`,
+    // );
   }
 
   // Fetch articles from the database within the specified date range

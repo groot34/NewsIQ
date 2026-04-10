@@ -60,15 +60,15 @@ IMPORTANT RULES:
 - Strings must NOT contain literal newlines or control characters. Escape them (e.g., \\n).
 `;
 
-    console.log("Starting streamText generation...");
+    // console.log("Starting streamText generation...");
     // Reverting to streamText because streamObject/json_schema is not supported by this Groq model
     const result = streamText({
       model,
       prompt,
       onFinish: ({ text, usage }: { text: string; usage: any }) => {
-        console.log("Generation finished. Length:", text.length);
-        console.log("Snippet:", text.substring(0, 100));
-        console.log("Usage:", usage);
+        // console.log("Generation finished. Length:", text.length);
+        // console.log("Snippet:", text.substring(0, 100));
+        // console.log("Usage:", usage);
       },
     });
 

@@ -43,7 +43,7 @@ ${i + 1}. "${article.title}"
 `;
 
     if (currentTotalChars + formattedArticle.length > MAX_TOTAL_CHARS) {
-      console.warn(`Prompt truncation: Reached character limit at article ${i + 1} of ${articles.length}`);
+      // console.warn(`Prompt truncation: Reached character limit at article ${i + 1} of ${articles.length}`);
       break;
     }
 
@@ -129,7 +129,19 @@ function buildUserInstructionsSection(userInput?: string): string {
     return "";
   }
 
-  return `🔴 CRITICAL USER INSTRUCTIONS (MUST FOLLOW):\n${trimmedInput}\n\n`;
+  return `
+=============================================
+🎯 USER'S PRIMARY FOCUS / INSTRUCTIONS
+=============================================
+The user has requested the following specific focus or topic for this newsletter:
+"${trimmedInput}"
+
+HOW TO HANDLE THIS:
+1. This is your STRICT THEME. You must filter the provided articles and ONLY focus on content relevant to this instruction.
+2. If the user asks for a specific topic (e.g., "Iran-USA war", "Apple News"), ignore all RSS articles that are unrelated to that topic.
+3. If NONE of the provided articles match the user's focus, DO NOT hallucinate or copy unrelated articles. Instead, write a brief, polite newsletter stating that there were no updates regarding "${trimmedInput}" in the current feed sources for the selected dates.
+=============================================
+`;
 }
 
 /**
@@ -201,7 +213,7 @@ function buildImportantNotes(params: NewsletterPromptParams): string[] {
 
   if (hasUserInput) {
     notes.push(
-      "The user's specific instructions take precedence and should be clearly reflected in the content",
+      "🔴 CRITICAL FILTER: The user's specific instructions override general summarization. Discard and ignore any provided RSS articles that do not align with their requested topic.",
     );
   }
 
