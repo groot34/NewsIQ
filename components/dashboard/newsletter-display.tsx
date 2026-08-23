@@ -262,9 +262,9 @@ export function NewsletterDisplay({
           )}
         </div>
 
-        {/* Right Column - Top Announcements */}
-        <div className="lg:col-span-3">
-          {newsletter.topAnnouncements && newsletter.topAnnouncements.length > 0 && (
+        {/* Right Column - Top Announcements & Additional Info */}
+        <div className="lg:col-span-3 space-y-6">
+          {newsletter.topAnnouncements && newsletter.topAnnouncements.length > 0 ? (
             <div className="glass-card rounded-xl overflow-hidden">
               <div className="p-4 border-b border-slate-800 flex items-center justify-between">
                 <h3 className="font-semibold text-white">Top 5 Announcements</h3>
@@ -284,11 +284,22 @@ export function NewsletterDisplay({
                 ))}
               </div>
             </div>
-          )}
+          ) : isGenerating ? (
+            <div className="glass-card rounded-xl p-5 border border-slate-800/80 space-y-4 animate-pulse">
+              <div className="flex items-center justify-between">
+                <div className="h-4 w-36 bg-slate-700 rounded" />
+              </div>
+              <div className="space-y-3">
+                <div className="h-12 bg-slate-800/60 rounded-lg" />
+                <div className="h-12 bg-slate-800/60 rounded-lg" />
+                <div className="h-12 bg-slate-800/60 rounded-lg" />
+              </div>
+            </div>
+          ) : null}
 
           {/* Additional Info if present */}
           {newsletter.additionalInfo && (
-            <div className="glass-card rounded-xl overflow-hidden mt-6">
+            <div className="glass-card rounded-xl overflow-hidden">
               <div className="p-4 border-b border-slate-800">
                 <h3 className="font-semibold text-white">Additional Information</h3>
               </div>

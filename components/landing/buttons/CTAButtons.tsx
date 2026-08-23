@@ -1,4 +1,4 @@
-import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
+import { SignedIn, SignedOut } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
@@ -11,14 +11,15 @@ async function CTAButtons() {
     <>
       {/* Signed out users */}
       <SignedOut>
-        <SignInButton mode="modal" forceRedirectUrl="/dashboard">
-          <Button 
-            size="lg" 
-            className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg shadow-blue-500/25 transition-all hover:shadow-xl hover:shadow-blue-500/30"
-          >
+        <Button
+          asChild
+          size="lg"
+          className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg shadow-blue-500/25 transition-all hover:shadow-xl hover:shadow-blue-500/30"
+        >
+          <Link href="/sign-in?redirect_url=/dashboard">
             Get Started <ArrowRight className="ml-2 size-4" />
-          </Button>
-        </SignInButton>
+          </Link>
+        </Button>
         <Button
           asChild
           size="lg"

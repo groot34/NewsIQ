@@ -174,23 +174,39 @@ export function NewsletterGenerationPage() {
   const newsletter = React.useMemo(() => {
     if (!completion) return undefined;
     try {
-      let cleanJson = completion.trim();
+      let text = completion.trim();
 
-      // Strip Markdown code fences if the model adds them
-      const match = cleanJson.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-      if (match) {
-        cleanJson = match[1];
-      }
+      // Strip reasoning tags e.g. <think>...</think>
+      text = text.replace(/<think>[\s\S]*?(?:<\/think>|$)/gi, "").trim();
+
+      // Strip Markdown code fences if present
+      text = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
 
       // Sanitize literal newlines inside JSON strings
-      cleanJson = cleanJsonString(cleanJson);
+      text = cleanJsonString(text);
 
-      if (!cleanJson.startsWith('{')) return undefined;
+      const firstBrace = text.indexOf("{");
+      if (firstBrace === -1) return undefined;
+      const jsonCandidate = text.slice(firstBrace);
 
       // parsePartialJson never throws — it returns whatever it can
       // extract from an incomplete JSON string.
-      const parsed = parsePartialJson(cleanJson) as Partial<NewsletterObject>;
-      return parsed ?? undefined;
+      const parsed = parsePartialJson(jsonCandidate) as any;
+      if (!parsed || typeof parsed !== "object") return undefined;
+
+      const titles = parsed.suggestedTitles || parsed.suggested_titles || parsed.titles || [];
+      const subjects = parsed.suggestedSubjectLines || parsed.suggested_subject_lines || parsed.subjectLines || [];
+      const announcements = parsed.topAnnouncements || parsed.top_announcements || parsed.announcements || [];
+      const additional = parsed.additionalInfo || parsed.additional_info || parsed.additionalInformation || undefined;
+      const body = parsed.body || parsed.newsletterBody || parsed.content || "";
+
+      return {
+        suggestedTitles: Array.isArray(titles) ? titles : [],
+        suggestedSubjectLines: Array.isArray(subjects) ? subjects : [],
+        topAnnouncements: Array.isArray(announcements) ? announcements : [],
+        additionalInfo: typeof additional === "string" ? additional : undefined,
+        body: typeof body === "string" ? body : "",
+      } as Partial<NewsletterObject>;
     } catch {
       return undefined;
     }

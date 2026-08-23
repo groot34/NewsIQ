@@ -14,10 +14,10 @@ import type { ArticleForPrompt, NewsletterPromptParams } from "./types";
  * @returns Formatted string with all article summaries
  */
 export function buildArticleSummaries(articles: ArticleForPrompt[]): string {
-  // Approximate limits to stay within Groq's 12k TPM limit
-  // We'll aim for ~6k tokens for articles to leave room for the rest of the prompt and response
-  const MAX_TOTAL_CHARS = 25000;
-  const MAX_CHARS_PER_ARTICLE = 1000;
+  // Approximate limits to stay comfortably within Groq's 8k TPM limit
+  // ~2.5k tokens for articles leaves ~5k tokens for the rest of prompt and generation
+  const MAX_TOTAL_CHARS = 10000;
+  const MAX_CHARS_PER_ARTICLE = 600;
 
   let currentTotalChars = 0;
   const summaries: string[] = [];
