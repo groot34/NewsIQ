@@ -79,35 +79,33 @@ export function NewsletterGenerationPage() {
   const hasStartedRef = React.useRef(false);
   const [articlesCount, setArticlesCount] = React.useState(0);
 
-  // Parse generation parameters from URL query string
+  // Parse generation parameters from URL query string (stable primitives)
   const feedIds = searchParams.get("feedIds");
   const startDate = searchParams.get("startDate");
   const endDate = searchParams.get("endDate");
   const userInput = searchParams.get("userInput");
 
-  let params: {
-    feedIds: string[];
-    startDate: string;
-    endDate: string;
-    userInput?: string;
-  } | null = null;
-
-  if (feedIds && startDate && endDate) {
+  // Memoize params so it doesn't get a new reference on every render.
+  // The useEffect depends on this — an unstable reference would cause
+  // hasStartedRef to block re-triggers when Suspense unsuspends on
+  // client-side navigation.
+  const params = React.useMemo(() => {
+    if (!feedIds || !startDate || !endDate) return null;
     try {
-      params = {
-        feedIds: JSON.parse(feedIds),
+      return {
+        feedIds: JSON.parse(feedIds) as string[],
         startDate,
         endDate,
         userInput: userInput || undefined,
       };
     } catch {
-      params = null;
+      return null;
     }
-  }
+  }, [feedIds, startDate, endDate, userInput]);
 
   // Manual stream handling state
   const [completion, setCompletion] = React.useState("");
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(Boolean(feedIds && startDate && endDate));
   const [error, setError] = React.useState<unknown>(null);
 
   // Typewriter animation states — one per section
@@ -117,7 +115,7 @@ export function NewsletterGenerationPage() {
   const [animatedSubjectLines, setAnimatedSubjectLines] = React.useState<string[]>([]);
   const [animatedAnnouncements, setAnimatedAnnouncements] = React.useState<string[]>([]);
 
-  // Manual stream reader
+  // Response reader
   const handleStream = async (requestParams: any) => {
     setIsLoading(true);
     setError(null);
@@ -131,35 +129,24 @@ export function NewsletterGenerationPage() {
       });
 
       if (!response.ok) {
-        // Try to parse error message from response
+        let errorMsg = `HTTP error! status: ${response.status}`;
         try {
           const errorData = await response.json();
           if (errorData.error) {
-            throw new Error(errorData.error);
+            errorMsg = errorData.error;
           }
-        } catch (parseError) {
-          // If parsing fails, throw generic error
-          if (parseError instanceof Error && parseError.message !== "Unexpected end of JSON input") {
-            throw parseError;
-          }
+        } catch {
+          // ignore JSON parse error for error body
         }
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(errorMsg);
       }
 
-      if (!response.body) {
-        throw new Error("Response body is empty");
+      // Read text response
+      const text = await response.text();
+      if (!text || !text.trim()) {
+        throw new Error("Received empty response from generation service");
       }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let done = false;
-
-      while (!done) {
-        const { value, done: doneReading } = await reader.read();
-        done = doneReading;
-        const chunkValue = decoder.decode(value, { stream: !done });
-        setCompletion((prev) => prev + chunkValue);
-      }
+      setCompletion(text);
     } catch (err) {
       console.error("Stream error:", err);
       setError(err);
@@ -168,9 +155,7 @@ export function NewsletterGenerationPage() {
     }
   };
 
-  // Parse newsletter from the streaming completion string.
-  // Uses best-effort-json-parser so partial JSON during streaming
-  // is parsed incrementally, enabling the real-time typewriter effect.
+  // Parse newsletter from the completion string.
   const newsletter = React.useMemo(() => {
     if (!completion) return undefined;
     try {
@@ -182,16 +167,23 @@ export function NewsletterGenerationPage() {
       // Strip Markdown code fences if present
       text = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
 
-      // Sanitize literal newlines inside JSON strings
-      text = cleanJsonString(text);
-
       const firstBrace = text.indexOf("{");
       if (firstBrace === -1) return undefined;
-      const jsonCandidate = text.slice(firstBrace);
+      const lastBrace = text.lastIndexOf("}");
+      const jsonCandidate =
+        lastBrace > firstBrace ? text.slice(firstBrace, lastBrace + 1) : text.slice(firstBrace);
 
-      // parsePartialJson never throws — it returns whatever it can
-      // extract from an incomplete JSON string.
-      const parsed = parsePartialJson(jsonCandidate) as any;
+      let parsed: any;
+      try {
+        parsed = JSON.parse(jsonCandidate);
+      } catch {
+        try {
+          parsed = parsePartialJson(cleanJsonString(jsonCandidate));
+        } catch {
+          parsed = parsePartialJson(jsonCandidate);
+        }
+      }
+
       if (!parsed || typeof parsed !== "object") return undefined;
 
       const titles = parsed.suggestedTitles || parsed.suggested_titles || parsed.titles || [];
@@ -291,8 +283,9 @@ export function NewsletterGenerationPage() {
     };
   }, [newsletter, animatedBody, animatedAdditionalInfo, animatedTitles, animatedSubjectLines, animatedAnnouncements]);
 
-  // Auto-start generation with pre-flight metadata check
-
+  // Auto-start generation with pre-flight metadata check.
+  // Depends on the stable primitive URL values — NOT on the params object —
+  // so this never re-fires due to a reference change between renders.
   React.useEffect(() => {
     if (!params || hasStartedRef.current) {
       return;
@@ -300,13 +293,15 @@ export function NewsletterGenerationPage() {
 
     hasStartedRef.current = true;
 
+    const currentParams = params; // capture stable snapshot
+
     const startGeneration = async () => {
       try {
         // Get metadata for toast notifications
         const response = await fetch("/api/newsletter/prepare", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(params),
+          body: JSON.stringify(currentParams),
         });
 
         if (response.ok) {
@@ -329,16 +324,17 @@ export function NewsletterGenerationPage() {
         }
 
         // Start AI generation
-        await handleStream(params);
-      } catch (error) {
-        console.error("Failed to prepare newsletter:", error);
-        // Start generation anyway
-        await handleStream(params);
+        await handleStream(currentParams);
+      } catch (err) {
+        console.error("Failed to prepare newsletter:", err);
+        // Start generation anyway even if prepare failed
+        await handleStream(currentParams);
       }
     };
 
     startGeneration();
-  }, [params]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [feedIds, startDate, endDate, userInput]);
 
   // Track if we've already shown the success toast for this generation
   const hasShownToastRef = React.useRef(false);

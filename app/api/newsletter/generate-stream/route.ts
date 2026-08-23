@@ -1,4 +1,4 @@
-import { streamText } from "ai";
+import { generateText } from "ai";
 import type { NextRequest } from "next/server";
 import { getUserSettingsByUserId } from "@/actions/user-settings";
 import { getCurrentUser } from "@/lib/auth/helpers";
@@ -7,9 +7,9 @@ import {
   buildNewsletterPrompt,
 } from "@/lib/newsletter/prompt-builder";
 import { prepareFeedsAndArticles } from "@/lib/rss/feed-refresh";
-import { model, modelLarge, modelQwen } from "@/lib/ai/groq";
+import { model } from "@/lib/ai/groq";
 
-// Vercel Pro: 60s max duration
+// Vercel Pro: 60s max
 export const maxDuration = 60;
 
 const JSON_RULES = `
@@ -24,58 +24,10 @@ IMPORTANT RULES:
   "body": "string (newsletter body, markdown OK, escape newlines as \\n)"
 }
 - EXACTLY 5 suggestedTitles, EXACTLY 5 suggestedSubjectLines, EXACTLY 5 topAnnouncements.
-- Body: 800–1200 words.
+- Body: 600–1000 words, comprehensive and insightful.
 - No literal newlines inside string values — use \\n instead.
 - Output MUST start with { and end with }.
 `;
-
-/** True for transient errors where a different model queue may succeed */
-function isModelError(e: unknown): boolean {
-  if (!(e instanceof Error)) return false;
-  const msg = e.message.toLowerCase();
-  return (
-    msg.includes("overloaded") ||
-    msg.includes("rate_limit") ||
-    msg.includes("rate limit") ||
-    msg.includes("request too large") ||
-    msg.includes("503") ||
-    msg.includes("413") ||
-    msg.includes("429")
-  );
-}
-
-/**
- * Tries models in order, yields text chunks.
- * Falls back to the next model on overload/rate-limit errors.
- */
-async function* generateWithFallback(prompt: string): AsyncGenerator<string> {
-  const models = [model, modelLarge, modelQwen] as const;
-  const modelNames = ["gpt-oss-20b", "gpt-oss-120b", "qwen3.6-27b"];
-  let lastError: unknown;
-
-  for (let i = 0; i < models.length; i++) {
-    try {
-      const { textStream } = streamText({ model: models[i], prompt });
-      for await (const chunk of textStream) {
-        yield chunk;
-      }
-      return; // success — stop trying
-    } catch (e) {
-      if (isModelError(e)) {
-        lastError = e;
-        const next = modelNames[i + 1];
-        console.warn(
-          `[newsletter] ${modelNames[i]} failed${next ? `, trying ${next}` : " (no more fallbacks)"}:`,
-          e instanceof Error ? e.message : e,
-        );
-        continue;
-      }
-      throw e; // non-retriable error — propagate immediately
-    }
-  }
-
-  throw lastError ?? new Error("All models failed");
-}
 
 export async function POST(req: NextRequest) {
   try {
@@ -100,33 +52,19 @@ export async function POST(req: NextRequest) {
         settings,
       }) + JSON_RULES;
 
-    // Convert AsyncGenerator → ReadableStream<Uint8Array> for the Response
-    const encoder = new TextEncoder();
-    const generator = generateWithFallback(prompt);
-
-    const readable = new ReadableStream<Uint8Array>({
-      async pull(controller) {
-        const { value, done } = await generator.next();
-        if (done) {
-          controller.close();
-        } else {
-          controller.enqueue(encoder.encode(value));
-        }
-      },
-      cancel() {
-        // Clean up if the client disconnects
-        generator.return?.("");
-      },
+    const { text } = await generateText({
+      model,
+      prompt,
+      maxOutputTokens: 3500,
     });
 
-    return new Response(readable, {
+    console.log(`[newsletter] Successfully generated newsletter (${text.length} chars)`);
+
+    return new Response(text, {
       status: 200,
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
-        // Prevent Vercel edge / CDN from buffering — critical for streaming
-        "Cache-Control": "no-cache, no-store",
-        "X-Accel-Buffering": "no",
-        "X-Content-Type-Options": "nosniff",
+        "Cache-Control": "no-store",
       },
     });
   } catch (e) {
