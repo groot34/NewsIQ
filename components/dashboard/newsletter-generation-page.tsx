@@ -11,13 +11,6 @@ import {
   saveGeneratedNewsletter,
 } from "@/actions/generate-newsletter";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { NewsletterDisplay } from "./newsletter-display";
 import { NewsletterLoadingCard } from "./newsletter-loading-card";
 
@@ -35,16 +28,6 @@ const newsletterSchema = z.object({
 
 type NewsletterObject = z.infer<typeof newsletterSchema>;
 
-/**
- * Newsletter Generation Page
- *
- * This component handles the full newsletter generation flow:
- * 1. Reads generation parameters from URL
- * 2. Prepares metadata and shows toast notifications
- * 3. Auto-starts generation using AI SDK's useObject hook
- * 4. Displays the streaming newsletter
- * 5. Allows saving for Pro users
- */
 // Utility to clean invalid JSON (escapes newlines within strings)
 function cleanJsonString(str: string): string {
   let inString = false;
@@ -86,9 +69,6 @@ export function NewsletterGenerationPage() {
   const userInput = searchParams.get("userInput");
 
   // Memoize params so it doesn't get a new reference on every render.
-  // The useEffect depends on this — an unstable reference would cause
-  // hasStartedRef to block re-triggers when Suspense unsuspends on
-  // client-side navigation.
   const params = React.useMemo(() => {
     if (!feedIds || !startDate || !endDate) return null;
     try {
@@ -103,9 +83,14 @@ export function NewsletterGenerationPage() {
     }
   }, [feedIds, startDate, endDate, userInput]);
 
+  // Unique session storage cache key for this exact parameter combination
+  const cacheKey = React.useMemo(() => {
+    return `newsiq_newsletter_${feedIds || ""}_${startDate || ""}_${endDate || ""}_${userInput || ""}`;
+  }, [feedIds, startDate, endDate, userInput]);
+
   // Manual stream handling state
   const [completion, setCompletion] = React.useState("");
-  const [isLoading, setIsLoading] = React.useState(Boolean(feedIds && startDate && endDate));
+  const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<unknown>(null);
 
   // Typewriter animation states — one per section
@@ -146,7 +131,23 @@ export function NewsletterGenerationPage() {
       if (!text || !text.trim()) {
         throw new Error("Received empty response from generation service");
       }
+
       setCompletion(text);
+
+      // Save to sessionStorage so refreshing the page restores the newsletter instantly
+      try {
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem(
+            cacheKey,
+            JSON.stringify({
+              completion: text,
+              articlesCount,
+            }),
+          );
+        }
+      } catch {
+        // Ignore sessionStorage quota or privacy mode errors
+      }
     } catch (err) {
       console.error("Stream error:", err);
       setError(err);
@@ -205,7 +206,6 @@ export function NewsletterGenerationPage() {
   }, [completion]);
 
   // ── Typewriter animation effects ──────────────────────────────────────────
-  // All placed after `newsletter` so they can reference it safely.
 
   // Reset all animated states when a new generation starts
   React.useEffect(() => {
@@ -283,19 +283,10 @@ export function NewsletterGenerationPage() {
     };
   }, [newsletter, animatedBody, animatedAdditionalInfo, animatedTitles, animatedSubjectLines, animatedAnnouncements]);
 
-  // Auto-start generation with pre-flight metadata check.
-  // Depends on the stable primitive URL values — NOT on the params object —
-  // so this never re-fires due to a reference change between renders.
-  React.useEffect(() => {
-    if (!params || hasStartedRef.current) {
-      return;
-    }
-
-    hasStartedRef.current = true;
-
-    const currentParams = params; // capture stable snapshot
-
-    const startGeneration = async () => {
+  // Main generation controller with sessionStorage cache support
+  const executeGeneration = React.useCallback(
+    async (currentParams: NonNullable<typeof params>) => {
+      setIsLoading(true);
       try {
         // Get metadata for toast notifications
         const response = await fetch("/api/newsletter/prepare", {
@@ -307,14 +298,12 @@ export function NewsletterGenerationPage() {
         if (response.ok) {
           const data = await response.json();
 
-          // Show toast for feed refresh if needed
           if (data.feedsToRefresh > 0) {
             toast.info(
               `Refreshing ${data.feedsToRefresh} feed${data.feedsToRefresh > 1 ? "s" : ""}...`,
             );
           }
 
-          // Show toast for article analysis
           if (data.articlesFound > 0) {
             toast.info(
               `Analyzing ${data.articlesFound} article${data.articlesFound > 1 ? "s" : ""} from your feeds...`,
@@ -327,19 +316,76 @@ export function NewsletterGenerationPage() {
         await handleStream(currentParams);
       } catch (err) {
         console.error("Failed to prepare newsletter:", err);
-        // Start generation anyway even if prepare failed
         await handleStream(currentParams);
       }
-    };
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [cacheKey],
+  );
 
-    startGeneration();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [feedIds, startDate, endDate, userInput]);
+  // Auto-start generation or restore from sessionStorage cache on mount
+  React.useEffect(() => {
+    if (!params || hasStartedRef.current) {
+      return;
+    }
+
+    hasStartedRef.current = true;
+
+    // Check if we already generated a newsletter for these exact settings in this session
+    try {
+      if (typeof window !== "undefined") {
+        const cached = sessionStorage.getItem(cacheKey);
+        if (cached) {
+          const parsedCache = JSON.parse(cached);
+          if (parsedCache?.completion) {
+            setCompletion(parsedCache.completion);
+            if (parsedCache.articlesCount) {
+              setArticlesCount(parsedCache.articlesCount);
+            }
+            setIsLoading(false);
+            toast.info("Restored newsletter from current session");
+            return;
+          }
+        }
+      }
+    } catch {
+      // Ignore cache read errors
+    }
+
+    // Otherwise, generate fresh
+    executeGeneration(params);
+  }, [params, cacheKey, executeGeneration]);
+
+  // Handle explicit user request to regenerate with the same parameters
+  const handleRegenerate = React.useCallback(() => {
+    if (!params || isLoading) return;
+
+    try {
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem(cacheKey);
+      }
+    } catch {
+      // Ignore cache remove errors
+    }
+
+    // Reset animated display states
+    setCompletion("");
+    setAnimatedBody("");
+    setAnimatedAdditionalInfo("");
+    setAnimatedTitles([]);
+    setAnimatedSubjectLines([]);
+    setAnimatedAnnouncements([]);
+    setError(null);
+    hasShownToastRef.current = false;
+
+    toast.info("Regenerating newsletter...");
+    executeGeneration(params);
+  }, [params, isLoading, cacheKey, executeGeneration]);
 
   // Track if we've already shown the success toast for this generation
   const hasShownToastRef = React.useRef(false);
 
-  // Show success toast when generation completes (no auto-save)
+  // Show success toast when generation completes
   React.useEffect(() => {
     if (!isLoading && newsletter?.body && articlesCount > 0 && !hasShownToastRef.current) {
       toast.success(`Newsletter generated from ${articlesCount} articles!`);
@@ -348,7 +394,6 @@ export function NewsletterGenerationPage() {
   }, [isLoading, newsletter?.body, articlesCount]);
 
   // Navigation guard - warn users before leaving during generation
-  // This prevents accidental loss of work if they close the tab
   React.useEffect(() => {
     if (!isLoading) {
       return;
@@ -427,7 +472,7 @@ export function NewsletterGenerationPage() {
       <div className="absolute inset-0 grid-pattern pointer-events-none" />
       <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-[128px] pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-600/10 rounded-full blur-[128px] pointer-events-none" />
-      
+
       <div className="relative container mx-auto py-12 px-6 lg:px-8 space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -466,19 +511,20 @@ export function NewsletterGenerationPage() {
           </div>
         )}
 
-        {/* Newsletter display with typewriter body */}
+        {/* Newsletter display with typewriter body and Regenerate support */}
         {displayNewsletter?.body && (
           <div className="transition-opacity duration-500 ease-in-out animate-in fade-in">
             <NewsletterDisplay
               newsletter={displayNewsletter}
               onSave={handleSave}
               isGenerating={isLoading}
+              onRegenerate={handleRegenerate}
             />
           </div>
         )}
 
         {/* Show user-friendly error message */}
-        {(!isLoading && !newsletter?.body && (Boolean(completion) || Boolean(error))) && (() => {
+        {!isLoading && !newsletter?.body && (Boolean(completion) || Boolean(error)) && (() => {
           const errorMessage = error instanceof Error ? error.message : String(error);
           const isNoArticlesError = errorMessage.includes("No articles found");
 
@@ -536,20 +582,28 @@ export function NewsletterGenerationPage() {
                     {errorMessage}
                   </div>
                 )}
-                <Button
-                  onClick={handleBackToDashboard}
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg shadow-blue-500/25"
-                >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Dashboard
-                </Button>
+                <div className="flex gap-3">
+                  <Button
+                    onClick={handleRegenerate}
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg shadow-blue-500/25"
+                  >
+                    Try Again
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={handleBackToDashboard}
+                    className="text-slate-400 hover:text-white"
+                  >
+                    Back to Dashboard
+                  </Button>
+                </div>
               </div>
             </div>
           );
         })()}
 
-        {/* If generation hasn't started yet */}
-        {!isLoading && !newsletter?.body && !completion && (
+        {/* If generation hasn't started yet and not loading */}
+        {!isLoading && !newsletter?.body && !completion && !error && (
           <div className="glass-card rounded-xl p-8">
             <h2 className="text-2xl font-semibold text-white mb-2">Preparing to Generate</h2>
             <p className="text-slate-400">

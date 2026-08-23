@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Copy, Download } from "lucide-react";
+import { Check, Copy, Download, RefreshCw } from "lucide-react";
 import * as React from "react";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
@@ -19,6 +19,7 @@ interface NewsletterDisplayProps {
   onSave: () => Promise<void>;
   isGenerating: boolean;
   hideSaveButton?: boolean;
+  onRegenerate?: () => void;
 }
 
 /**
@@ -39,6 +40,7 @@ export function NewsletterDisplay({
   onSave,
   isGenerating,
   hideSaveButton = false,
+  onRegenerate,
 }: NewsletterDisplayProps) {
   const [isSaving, setIsSaving] = React.useState(false);
   const [copiedField, setCopiedField] = React.useState<string | null>(null);
@@ -158,6 +160,20 @@ export function NewsletterDisplay({
           </p>
         </div>
         <div className="flex items-center gap-3 w-full sm:w-auto">
+          {onRegenerate && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onRegenerate}
+              disabled={isGenerating || isSaving}
+              className="border-slate-700 bg-slate-800/60 text-slate-200 hover:bg-slate-700 hover:text-white shadow-sm flex-1 sm:flex-none"
+              title="Generate a fresh version with the same settings"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 mr-2 text-purple-400 ${isGenerating ? "animate-spin" : ""}`} />
+              Regenerate
+            </Button>
+          )}
+
           <Button
             variant="outline"
             size="sm"
