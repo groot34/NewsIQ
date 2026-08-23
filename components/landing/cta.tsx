@@ -33,11 +33,11 @@ export function CTA() {
           <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-6">
             <div className="flex items-center justify-center gap-2 text-slate-300">
               <Check className="size-5 text-emerald-400" />
-              <span className="text-sm">Free to get started</span>
+              <span className="text-sm">Instant RSS curation</span>
             </div>
             <div className="flex items-center justify-center gap-2 text-slate-300">
               <Check className="size-5 text-emerald-400" />
-              <span className="text-sm">No credit card required</span>
+              <span className="text-sm">Custom tone & brand voice</span>
             </div>
             <div className="flex items-center justify-center gap-2 text-slate-300">
               <Check className="size-5 text-emerald-400" />

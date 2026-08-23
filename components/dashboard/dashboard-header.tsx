@@ -6,7 +6,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { PlanBadge } from "./plan-badge";
 
 export function DashboardHeader() {
   const pathname = usePathname();
@@ -80,7 +79,6 @@ export function DashboardHeader() {
 
           {/* Right side actions */}
           <div className="flex items-center gap-3">
-            <PlanBadge />
             <SignOutButton>
               <Button 
                 variant="outline" 

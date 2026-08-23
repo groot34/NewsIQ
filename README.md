@@ -2,8 +2,6 @@
 
 **NewsIQ** is an advanced, AI-powered newsletter generation platform designed to streamline the process of curating and creating professional newsletters. By leveraging RSS feeds and cutting-edge AI, NewsIQ automatically aggregates content, summarizes articles, and generates formatted newsletters tailored to your brand's voice.
 
-![NewsIQ Dashboard](https://placehold.co/1200x600/1e1e2e/ffffff?text=NewsIQ+Dashboard+Preview)
-
 ## 🚀 Key Features
 
 ### 🤖 AI-Powered Generation
