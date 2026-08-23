@@ -14,18 +14,17 @@ export const maxDuration = 60;
 
 const JSON_RULES = `
 IMPORTANT RULES:
-- Output VALID JSON only. No markdown fences, no commentary, no preamble.
+- Output VALID JSON only. No markdown fences (\`\`\`json), no commentary, no preamble.
 - Strictly follow this schema:
 {
   "suggestedTitles": ["string","string","string","string","string"],
   "suggestedSubjectLines": ["string","string","string","string","string"],
   "topAnnouncements": ["string","string","string","string","string"],
-  "additionalInfo": "string (optional insights, or empty string)",
-  "body": "string (newsletter body, markdown OK, escape newlines as \\n)"
+  "additionalInfo": "string (supplementary insights, or empty string)",
+  "body": "string (comprehensive newsletter formatted in rich Markdown with ## section headers, ### subheadings, **bold highlights**, bullet lists, and > quotes)"
 }
 - EXACTLY 5 suggestedTitles, EXACTLY 5 suggestedSubjectLines, EXACTLY 5 topAnnouncements.
-- Body: 600–1000 words, comprehensive and insightful.
-- No literal newlines inside string values — use \\n instead.
+- Body should be 600–1000 words: well-structured, engaging, and professional.
 - Output MUST start with { and end with }.
 `;
 
