@@ -140,23 +140,8 @@ export function NewsletterGenerationPage() {
         if (done) break;
 
         const chunk = decoder.decode(value, { stream: true });
-        // Parse AI SDK data stream format
-        const lines = chunk.split("\n");
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            const data = line.slice(6);
-            if (data === "[DONE]") continue;
-            try {
-              const parsed = JSON.parse(data);
-              if (parsed.type === "textDelta" && parsed.textDelta) {
-                fullText += parsed.textDelta;
-                setCompletion(fullText);
-              }
-            } catch {
-              // Skip invalid JSON
-            }
-          }
-        }
+        fullText += chunk;
+        setCompletion(fullText);
       }
 
       if (!fullText || !fullText.trim()) {

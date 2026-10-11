@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
 
     console.log(`[newsletter] Streaming newsletter generation`);
 
-    return result.toDataStreamResponse();
+    return result.toTextStreamResponse();
   } catch (e) {
     console.error("[newsletter] Generation error:", e);
     const message =
