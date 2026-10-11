@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     const result = streamText({
       model,
       prompt,
-      maxTokens: 2500,
+      maxOutputTokens: 2500,
       onError: (err) => {
         console.error("[newsletter] Stream error:", err);
       },
