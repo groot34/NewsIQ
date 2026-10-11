@@ -148,6 +148,10 @@ export function NewsletterGenerationPage() {
         throw new Error("Received empty response from generation service");
       }
 
+      if (!fullText || !fullText.trim()) {
+        throw new Error("Received empty response from generation service");
+      }
+
       // Save to sessionStorage so refreshing the page restores the newsletter instantly
       try {
         if (typeof window !== "undefined") {

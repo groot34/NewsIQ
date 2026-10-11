@@ -1,4 +1,3 @@
-import { streamText } from "ai";
 import type { NextRequest } from "next/server";
 import { getUserSettingsByUserId } from "@/actions/user-settings";
 import { getCurrentUser } from "@/lib/auth/helpers";
@@ -7,7 +6,7 @@ import {
   buildNewsletterPrompt,
 } from "@/lib/newsletter/prompt-builder";
 import { prepareFeedsAndArticles } from "@/lib/rss/feed-refresh";
-import { model } from "@/lib/ai/groq";
+import { groq } from "@/lib/ai/groq";
 
 // Vercel Pro: 60s max - streaming bypasses timeout
 export const maxDuration = 60;
@@ -51,15 +50,49 @@ export async function POST(req: NextRequest) {
         settings,
       }) + JSON_RULES;
 
-    const result = streamText({
-      model,
-      prompt,
-      maxOutputTokens: 2500,
+    console.log(`[newsletter] Starting Groq stream`);
+
+    const chatCompletion = await groq.chat.completions.create({
+      messages: [
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      model: "llama-3.3-70b-versatile",
+      temperature: 1,
+      max_completion_tokens: 2500,
+      top_p: 1,
+      stream: true,
     });
 
-    console.log(`[newsletter] Streaming newsletter generation`);
+    // Create a readable stream
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const chunk of chatCompletion) {
+            const content = chunk.choices[0]?.delta?.content || "";
+            if (content) {
+              controller.enqueue(encoder.encode(content));
+            }
+          }
+          controller.close();
+        } catch (error) {
+          console.error("[newsletter] Stream error:", error);
+          controller.error(error);
+        }
+      },
+    });
 
-    return result.toTextStreamResponse();
+    console.log(`[newsletter] Streaming response ready`);
+
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-store",
+      },
+    });
   } catch (e) {
     console.error("[newsletter] Generation error:", e);
     const message =

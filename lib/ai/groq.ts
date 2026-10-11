@@ -1,9 +1,5 @@
-import { createOpenAI } from "@ai-sdk/openai";
+import { Groq } from "groq-sdk";
 
-export const groq = createOpenAI({
-  baseURL: "https://api.groq.com/openai/v1",
+export const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
-
-// llama-3.3-70b-versatile is fast and reliable for JSON output
-export const model = groq.chat("llama-3.3-70b-versatile");
