@@ -51,15 +51,20 @@ export async function POST(req: NextRequest) {
         settings,
       }) + JSON_RULES;
 
+    console.log(`[newsletter] Streaming newsletter generation`);
+
     const result = streamText({
       model,
       prompt,
-      maxOutputTokens: 2500,
+      maxTokens: 2500,
+      onError: (err) => {
+        console.error("[newsletter] Stream error:", err);
+      },
     });
 
-    console.log(`[newsletter] Streaming newsletter generation`);
-
-    return result.toTextStreamResponse();
+    return result.toTextStreamResponse({
+      headers: { "Content-Type": "text/plain; charset=utf-8" },
+    });
   } catch (e) {
     console.error("[newsletter] Generation error:", e);
     const message =
