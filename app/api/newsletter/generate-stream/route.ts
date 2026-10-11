@@ -57,12 +57,26 @@ export async function POST(req: NextRequest) {
       model,
       prompt,
       maxOutputTokens: 2500,
-      onError: (err) => {
-        console.error("[newsletter] Stream error:", err);
+    });
+
+    const encoder = new TextEncoder();
+    const readable = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const chunk of result.textStream) {
+            console.log(`[newsletter] chunk(${chunk.length}):`, chunk.slice(0, 80));
+            controller.enqueue(encoder.encode(chunk));
+          }
+          console.log("[newsletter] Stream complete");
+          controller.close();
+        } catch (streamErr) {
+          console.error("[newsletter] textStream error:", streamErr);
+          controller.error(streamErr);
+        }
       },
     });
 
-    return result.toTextStreamResponse({
+    return new Response(readable, {
       headers: { "Content-Type": "text/plain; charset=utf-8" },
     });
   } catch (e) {
