@@ -126,13 +126,42 @@ export function NewsletterGenerationPage() {
         throw new Error(errorMsg);
       }
 
-      // Read text response
-      const text = await response.text();
-      if (!text || !text.trim()) {
-        throw new Error("Received empty response from generation service");
+      // Read streaming response
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error("No response body");
       }
 
-      setCompletion(text);
+      const decoder = new TextDecoder();
+      let fullText = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        // Parse AI SDK data stream format
+        const lines = chunk.split("\n");
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const data = line.slice(6);
+            if (data === "[DONE]") continue;
+            try {
+              const parsed = JSON.parse(data);
+              if (parsed.type === "textDelta" && parsed.textDelta) {
+                fullText += parsed.textDelta;
+                setCompletion(fullText);
+              }
+            } catch {
+              // Skip invalid JSON
+            }
+          }
+        }
+      }
+
+      if (!fullText || !fullText.trim()) {
+        throw new Error("Received empty response from generation service");
+      }
 
       // Save to sessionStorage so refreshing the page restores the newsletter instantly
       try {
@@ -140,7 +169,7 @@ export function NewsletterGenerationPage() {
           sessionStorage.setItem(
             cacheKey,
             JSON.stringify({
-              completion: text,
+              completion: fullText,
               articlesCount,
             }),
           );

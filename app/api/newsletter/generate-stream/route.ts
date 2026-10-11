@@ -1,4 +1,4 @@
-import { generateText } from "ai";
+import { streamText } from "ai";
 import type { NextRequest } from "next/server";
 import { getUserSettingsByUserId } from "@/actions/user-settings";
 import { getCurrentUser } from "@/lib/auth/helpers";
@@ -9,7 +9,7 @@ import {
 import { prepareFeedsAndArticles } from "@/lib/rss/feed-refresh";
 import { model } from "@/lib/ai/groq";
 
-// Vercel Pro: 60s max
+// Vercel Pro: 60s max - streaming bypasses timeout
 export const maxDuration = 60;
 
 const JSON_RULES = `
@@ -51,21 +51,15 @@ export async function POST(req: NextRequest) {
         settings,
       }) + JSON_RULES;
 
-    const { text } = await generateText({
+    const result = streamText({
       model,
       prompt,
       maxOutputTokens: 3500,
     });
 
-    console.log(`[newsletter] Successfully generated newsletter (${text.length} chars)`);
+    console.log(`[newsletter] Streaming newsletter generation`);
 
-    return new Response(text, {
-      status: 200,
-      headers: {
-        "Content-Type": "text/plain; charset=utf-8",
-        "Cache-Control": "no-store",
-      },
-    });
+    return result.toDataStreamResponse();
   } catch (e) {
     console.error("[newsletter] Generation error:", e);
     const message =
