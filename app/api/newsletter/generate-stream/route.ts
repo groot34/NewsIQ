@@ -1,4 +1,3 @@
-import { streamText } from "ai";
 import type { NextRequest } from "next/server";
 import { getUserSettingsByUserId } from "@/actions/user-settings";
 import { getCurrentUser } from "@/lib/auth/helpers";
@@ -7,7 +6,7 @@ import {
   buildNewsletterPrompt,
 } from "@/lib/newsletter/prompt-builder";
 import { prepareFeedsAndArticles } from "@/lib/rss/feed-refresh";
-import { model } from "@/lib/ai/groq";
+import { groqClient, GROQ_MODEL } from "@/lib/ai/groq";
 
 // Vercel Pro: 60s max - streaming bypasses timeout
 export const maxDuration = 60;
@@ -51,26 +50,29 @@ export async function POST(req: NextRequest) {
         settings,
       }) + JSON_RULES;
 
-    console.log(`[newsletter] Streaming newsletter generation`);
+    console.log("[newsletter] Starting Groq stream via /v1/chat/completions");
 
-    const result = streamText({
-      model,
-      prompt,
-      maxOutputTokens: 2500,
+    const stream = await groqClient.chat.completions.create({
+      model: GROQ_MODEL,
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 2500,
+      stream: true,
     });
 
     const encoder = new TextEncoder();
     const readable = new ReadableStream({
       async start(controller) {
         try {
-          for await (const chunk of result.textStream) {
-            console.log(`[newsletter] chunk(${chunk.length}):`, chunk.slice(0, 80));
-            controller.enqueue(encoder.encode(chunk));
+          for await (const chunk of stream) {
+            const text = chunk.choices[0]?.delta?.content ?? "";
+            if (text) {
+              controller.enqueue(encoder.encode(text));
+            }
           }
           console.log("[newsletter] Stream complete");
           controller.close();
         } catch (streamErr) {
-          console.error("[newsletter] textStream error:", streamErr);
+          console.error("[newsletter] Stream error:", streamErr);
           controller.error(streamErr);
         }
       },
