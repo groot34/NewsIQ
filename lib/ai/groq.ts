@@ -1,7 +1,8 @@
-import { createGroq } from "@ai-sdk/groq";
+import { createOpenAI } from "@ai-sdk/openai";
 
-export const groq = createGroq({
+const groqClient = createOpenAI({
   apiKey: process.env.GROQ_API_KEY,
+  baseURL: "https://api.groq.com/openai/v1",
 });
 
-export const model = groq("llama-3.3-70b-versatile") as any;
+export const model = groqClient("llama-3.3-70b-versatile");
