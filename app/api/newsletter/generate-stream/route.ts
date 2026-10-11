@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
     const result = streamText({
       model,
       prompt,
-      maxOutputTokens: 3500,
+      maxOutputTokens: 2500,
     });
 
     console.log(`[newsletter] Streaming newsletter generation`);

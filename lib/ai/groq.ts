@@ -5,5 +5,5 @@ export const groq = createOpenAI({
   apiKey: process.env.GROQ_API_KEY,
 });
 
-// openai/gpt-oss-120b is tested & verified to output clean, complete JSON.
-export const model = groq.chat("openai/gpt-oss-120b");
+// llama-3.3-70b-versatile is fast and reliable for JSON output
+export const model = groq.chat("llama-3.3-70b-versatile");
